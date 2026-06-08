@@ -1,23 +1,16 @@
-export default async (request) => {
-  const url = new URL(request.url);
-  const target = "http://185.158.249.43:2087" + url.pathname + url.search;
-  
-  const headers = new Headers(request.headers);
-  headers.delete("host");
+exports.handler = async function(event, context) {
+  const target = "http://185.158.249.43:2087" + (event.path || "/") + (event.rawQuery ? "?" + event.rawQuery : "");
   
   const response = await fetch(target, {
-    method: request.method,
-    headers: headers,
-    body: request.body,
-    duplex: "half",
+    method: event.httpMethod,
+    headers: { ...event.headers, host: "185.158.249.43" },
+    body: event.body || undefined,
   });
   
-  return new Response(response.body, {
-    status: response.status,
-    headers: response.headers,
-  });
-};
-
-export const config = {
-  path: "/*"
+  const body = await response.text();
+  
+  return {
+    statusCode: response.status,
+    body: body,
+  };
 };
